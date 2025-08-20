@@ -1,4 +1,3 @@
-import copy
 import multiprocessing as mp
 import os
 import regex as re
@@ -6,7 +5,6 @@ import regex as re
 from collections import Counter, defaultdict
 from typing import BinaryIO
 
-from tests.common import gpt2_bytes_to_unicode
 
 PAT = r"""'(?:[sdmt]|ll|ve|re)| ?\p{L}+| ?\p{N}+| ?[^\s\p{L}\p{N}]+|\s+(?!\S)|\s+"""
 NUM_PROCESSES = 10
@@ -241,12 +239,19 @@ def train_bpe(
 
     for i in range(len(special_tokens)):
         vocab[len(vocab)] = special_tokens[i].encode("utf-8")
-    
+
     return vocab, merges
 
 
 if __name__ == "__main__":
-    vocab, merges = train_bpe("../tests/fixtures/tinystories_sample_5M.txt", 400, ["<|endoftext|>"])
+    import pickle
+    data_path = "/home/suchitg/ai/data/TinyStoriesV2-GPT4-train.txt"
+    vocab, merges = train_bpe(data_path, 10_000, ["<|endoftext|>"])
+    with open(data_path.split("/")[-1] + ".vocab.pkl", 'wb') as f:
+        pickle.dump(vocab, f)
+
+    with open(data_path.split("/")[-1] + ".merges.pkl", 'wb') as f:
+        pickle.dump(merges, f)
     # vocab, merges = train_bpe("../../data/TinyStoriesV2-GPT4-valid.txt", 400, ["<|endoftext|>"])
-    print(vocab)
-    print(merges)
+    # print(vocab)
+    # print(merges)
