@@ -82,15 +82,16 @@ def get_pair_stats(
 
 
 def pretokenize(
+    input_path: str | os.PathLike,
     f_start: int,
     f_end: int,
-    f: BinaryIO,
     special_tok_pat: str,
     proc_q: mp.Queue
 ):
 
-    f.seek(f_start)
-    chunk = f.read(f_end - f_start).decode("utf-8", errors="ignore")
+    with open(input_path, "rb") as f:
+        f.seek(f_start)
+        chunk = f.read(f_end - f_start).decode("utf-8", errors="ignore")
 
     word_count = Counter()
     for part in re.split(special_tok_pat, chunk):
@@ -214,7 +215,7 @@ def train_bpe(
         boundaries = find_chunk_boundaries(f, NUM_PROCESSES, b"<|endoftext|>")
 
         for start, end in zip(boundaries[:-1], boundaries[1:]):
-            proc = mp.Process(target=pretokenize, args=(start, end, f, special_tok_pat, results_q))
+            proc = mp.Process(target=pretokenize, args=(input_path, start, end, special_tok_pat, results_q))
             procs.append(proc)
             proc.start()
         
